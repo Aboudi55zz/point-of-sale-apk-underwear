@@ -118,7 +118,8 @@ fun BrandEditorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = {
             DialogTitleHeader(
                 icon = Icons.Filled.Storefront,
@@ -187,7 +188,7 @@ fun BrandEditorDialog(
                         onSave(name, notes, selectedColor)
                     }
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = CircleShape,
                 modifier = Modifier.testTag("save_brand_button")
             ) {
                 Text("حفظ")
@@ -237,7 +238,8 @@ fun ModelEditorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = {
             DialogTitleHeader(
                 icon = Icons.Filled.Category,
@@ -400,7 +402,7 @@ fun ModelEditorDialog(
                         firstStockText.toIntOrNull() ?: 20
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = CircleShape,
                 modifier = Modifier.testTag("save_model_button")
             ) {
                 Text("حفظ")
@@ -443,7 +445,8 @@ fun PieceEditorDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = {
             DialogTitleHeader(
                 icon = Icons.Filled.Inventory2,
@@ -538,7 +541,7 @@ fun PieceEditorDialog(
                         skuBarcode
                     )
                 },
-                shape = RoundedCornerShape(12.dp),
+                shape = CircleShape,
                 modifier = Modifier.testTag("save_piece_button")
             ) {
                 Text("حفظ")
@@ -559,7 +562,8 @@ fun ConfirmDeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         title = {
             DialogTitleHeader(
                 icon = Icons.Filled.DeleteForever,
@@ -571,8 +575,11 @@ fun ConfirmDeleteDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
                 modifier = Modifier.testTag("confirm_delete_button")
             ) {
                 Text("حذف")

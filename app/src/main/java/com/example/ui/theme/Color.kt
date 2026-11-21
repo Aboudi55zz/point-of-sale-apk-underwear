@@ -9,6 +9,13 @@ enum class AppColorPalette(
     val previewSecondary: Color,
     val previewBackground: Color
 ) {
+    MATERIAL_YOU(
+        titleAr = "ألوان Material You الديناميكية",
+        subtitleAr = "يتكيّف تلقائياً مع ألوان خلفية الجهاز (أندرويد 12+)",
+        previewPrimary = Color(0xFF3F5F90),
+        previewSecondary = Color(0xFF565E71),
+        previewBackground = Color(0xFFF9F9FF)
+    ),
     EMERALD_GOLD(
         titleAr = "زمرد وذهب دمشقي",
         subtitleAr = "أخضر زمردي عميق مع لمسات ذهبية دافئة وعاج ناعم",

@@ -1,23 +1,18 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,42 +23,41 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.Checkroom
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.WarningAmber
+import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -83,198 +77,401 @@ import com.example.util.CurrencyFormatter
 import com.example.util.CurrencyScale
 
 @Composable
-fun InventoryHeroSummaryCard(
-    brandsCount: Int,
+fun InventoryM3KpiStrip(
     modelsCount: Int,
+    variantsCount: Int,
     totalPiecesCount: Int,
     lowStockCount: Int,
     totalInventoryValueSyp: Long,
     currencyScale: CurrencyScale,
-    lowStockFilterActive: Boolean,
-    onBrandsClick: () -> Unit,
-    onLowStockClick: () -> Unit,
+    onRestockClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val primary = MaterialTheme.colorScheme.primary
-    val tertiary = MaterialTheme.colorScheme.tertiary
-    val secondary = MaterialTheme.colorScheme.secondary
-
-    Surface(
+    Row(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = Color.Transparent,
-        shadowElevation = 2.dp
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            primary,
-                            primary.copy(alpha = 0.88f),
-                            tertiary
-                        )
-                    )
-                )
+        // Primary tonal KPI: Total Value
+        Surface(
+            modifier = Modifier.weight(1.45f),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ) {
-            Canvas(modifier = Modifier.matchParentSize()) {
-                drawCircle(
-                    color = Color.White.copy(alpha = 0.07f),
-                    radius = size.height * 0.72f,
-                    center = Offset(size.width * 0.12f, size.height * 0.15f)
-                )
-                drawCircle(
-                    color = secondary.copy(alpha = 0.16f),
-                    radius = size.height * 0.55f,
-                    center = Offset(size.width * 0.92f, size.height * 0.95f)
-                )
-            }
-
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "إجمالي قيمة المخزون التقديرية",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White.copy(alpha = 0.82f)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = CurrencyFormatter.format(totalInventoryValueSyp, currencyScale),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.White.copy(alpha = 0.16f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f))
-                    ) {
-                        Box(
-                            modifier = Modifier.padding(10.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Inventory2,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    HeroMetricPill(
-                        label = "الماركات",
-                        value = "$brandsCount",
-                        icon = Icons.Filled.Storefront,
-                        onClick = onBrandsClick,
-                        modifier = Modifier.weight(1f)
+                    Icon(
+                        imageVector = Icons.Filled.TrendingUp,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
                     )
-                    HeroMetricPill(
-                        label = "الموديلات",
-                        value = "$modelsCount",
-                        icon = Icons.Filled.Category,
-                        modifier = Modifier.weight(1f)
-                    )
-                    HeroMetricPill(
-                        label = "القطع",
-                        value = "$totalPiecesCount",
-                        icon = Icons.Filled.Inventory2,
-                        modifier = Modifier.weight(1f)
-                    )
-                    HeroMetricPill(
-                        label = "نواقص",
-                        value = "$lowStockCount",
-                        icon = Icons.Filled.WarningAmber,
-                        highlighted = lowStockFilterActive || lowStockCount > 0,
-                        accentTint = if (lowStockCount > 0) Color(0xFFFFD580) else Color.White,
-                        onClick = onLowStockClick,
-                        modifier = Modifier.weight(1f)
+                    Text(
+                        text = "قيمة المخزون",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
                     )
                 }
+                Text(
+                    text = CurrencyFormatter.format(totalInventoryValueSyp, currencyScale),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "$totalPiecesCount قطعة فعلية",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f),
+                    maxLines = 1
+                )
             }
         }
-    }
-}
 
-@Composable
-private fun HeroMetricPill(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    highlighted: Boolean = false,
-    accentTint: Color = Color.White,
-    onClick: (() -> Unit)? = null
-) {
-    Surface(
-        modifier = modifier
-            .then(
-                if (onClick != null) {
-                    Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .clickable(onClick = onClick)
-                } else {
-                    Modifier
-                }
-            ),
-        shape = RoundedCornerShape(14.dp),
-        color = if (highlighted) Color.White.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.12f),
-        border = BorderStroke(
-            width = if (highlighted) 1.2.dp else 0.8.dp,
-            color = if (highlighted) accentTint.copy(alpha = 0.75f) else Color.White.copy(alpha = 0.16f)
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // Secondary tonal KPI: Models & Variants
+        Surface(
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = accentTint.copy(alpha = 0.92f),
-                modifier = Modifier.size(15.dp)
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = accentTint,
-                maxLines = 1
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.White.copy(alpha = 0.85f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Column(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Category,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "الموديلات",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
+                Text(
+                    text = "$modelsCount",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    text = "$variantsCount صنف فرعي",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.78f),
+                    maxLines = 1
+                )
+            }
+        }
+
+        // Alert KPI: Low Stock (tappable)
+        val hasAlert = lowStockCount > 0
+        Surface(
+            modifier = Modifier
+                .weight(0.9f)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(onClick = onRestockClick),
+            shape = RoundedCornerShape(16.dp),
+            color = if (hasAlert) WarningAmberContainer else SuccessGreenContainer,
+            contentColor = if (hasAlert) WarningAmber else SuccessGreen
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (hasAlert) Icons.Filled.WarningAmber else Icons.Filled.CheckCircleOutline,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "النواقص",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
+                }
+                Text(
+                    text = "$lowStockCount",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    text = if (hasAlert) "عرض الكل" else "ممتاز",
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1
+                )
+            }
         }
     }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun InventoryModelCard(
+fun InventoryM3ModelCard(
+    modelDetails: ModelWithDetails,
+    currencyScale: CurrencyScale,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onQuickAddPiece: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val brandAccent = Color(modelDetails.brand.accentColorHex)
+    val totalStock = remember(modelDetails.pieces) { modelDetails.pieces.sumOf { it.stockQty } }
+    val lowCount = remember(modelDetails.pieces) {
+        modelDetails.pieces.count { it.stockQty <= it.minStockAlert }
+    }
+    val outCount = remember(modelDetails.pieces) {
+        modelDetails.pieces.count { it.stockQty <= 0 }
+    }
+    val minPrice = remember(modelDetails.pieces) { modelDetails.pieces.minOfOrNull { it.priceSyp } }
+    val maxPrice = remember(modelDetails.pieces) { modelDetails.pieces.maxOfOrNull { it.priceSyp } }
+
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.42f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        label = "m3_model_card_bg"
+    )
+
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("inv_model_card_${modelDetails.model.id}"),
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = containerColor),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = if (isSelected) 3.dp else 1.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .then(
+                    if (isSelected) {
+                        Modifier.border(
+                            1.5.dp,
+                            MaterialTheme.colorScheme.primary,
+                            RoundedCornerShape(18.dp)
+                        )
+                    } else Modifier
+                )
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // M3 ListItem Top Row: Leading Avatar + Title/Meta + Trailing Price
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Leading M3 Monogram / Model Code Container
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = brandAccent.copy(alpha = 0.14f),
+                    border = BorderStroke(1.dp, brandAccent.copy(alpha = 0.3f)),
+                    modifier = Modifier.size(52.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = modelDetails.model.modelCode,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = brandAccent,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Text(
+                        text = modelDetails.model.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = modelDetails.brand.name,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = brandAccent
+                        )
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = buildString {
+                                append(modelDetails.model.category)
+                                if (modelDetails.model.fabricInfo.isNotBlank()) {
+                                    append(" • ")
+                                    append(modelDetails.model.fabricInfo)
+                                }
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Trailing Price & Stock Summary
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    if (minPrice != null) {
+                        Text(
+                            text = if (maxPrice != null && maxPrice != minPrice) {
+                                "${CurrencyFormatter.format(minPrice, currencyScale)}+"
+                            } else {
+                                CurrencyFormatter.format(minPrice, currencyScale)
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1
+                        )
+                    }
+                    Surface(
+                        shape = CircleShape,
+                        color = when {
+                            outCount > 0 -> AlertRedContainer
+                            lowCount > 0 -> WarningAmberContainer
+                            else -> SuccessGreenContainer
+                        }
+                    ) {
+                        Text(
+                            text = when {
+                                outCount > 0 -> "$outCount نفد • $totalStock"
+                                lowCount > 0 -> "$lowCount ناقص • $totalStock"
+                                else -> "$totalStock قطعة"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = when {
+                                outCount > 0 -> AlertRed
+                                lowCount > 0 -> WarningAmber
+                                else -> SuccessGreen
+                            },
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+            }
+
+            // Compact Variant Preview Chips + Manage Trigger
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FlowRow(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val previewPieces = modelDetails.pieces.take(3)
+                    previewPieces.forEach { p ->
+                        val pLow = p.stockQty <= p.minStockAlert
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (pLow) WarningAmberContainer.copy(alpha = 0.65f)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(resolveColorSwatch(p.color))
+                                        .border(
+                                            0.75.dp,
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                                            CircleShape
+                                        )
+                                )
+                                Text(
+                                    text = "${p.sizeLabel} (${p.stockQty})",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (pLow) WarningAmber else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                    if (modelDetails.pieces.size > 3) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f)
+                        ) {
+                            Text(
+                                text = "+${modelDetails.pieces.size - 3} أخرى",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                FilledTonalIconButton(
+                    onClick = onQuickAddPiece,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .testTag("add_piece_to_model_${modelDetails.model.id}")
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "إضافة قطعة",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun ModelDetailInspector(
     modelDetails: ModelWithDetails,
     currencyScale: CurrencyScale,
     onEditModel: () -> Unit,
@@ -285,225 +482,209 @@ fun InventoryModelCard(
     onAdjustStock: (Long, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var expanded by rememberSaveable(modelDetails.model.id) { mutableStateOf(true) }
-    val brandAccent = Color(modelDetails.brand.accentColorHex)
-    val pieces = modelDetails.pieces
-    val totalQty = pieces.sumOf { it.stockQty }
-    val lowCount = pieces.count { it.stockQty <= it.minStockAlert }
-    val minPrice = pieces.minOfOrNull { it.priceSyp }
-    val maxPrice = pieces.maxOfOrNull { it.priceSyp }
-    val priceSummary = when {
-        minPrice == null -> "بدون سعر"
-        minPrice == maxPrice -> CurrencyFormatter.format(minPrice, currencyScale)
-        else -> "${CurrencyFormatter.format(minPrice, currencyScale)} – ${CurrencyFormatter.format(maxPrice ?: minPrice, currencyScale)}"
+    val totalStock = remember(modelDetails.pieces) { modelDetails.pieces.sumOf { it.stockQty } }
+    val totalValue = remember(modelDetails.pieces) {
+        modelDetails.pieces.sumOf { it.priceSyp * it.stockQty }
     }
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .animateContentSize(animationSpec = spring(stiffness = Spring.StiffnessMediumLow))
-            .testTag("inv_model_card_${modelDetails.model.id}"),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(
-            width = 1.dp,
-            color = if (lowCount > 0) WarningAmber.copy(alpha = 0.4f)
-            else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
-        )
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // Detail Header
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min)
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            // Subtle Brand Color Accent Stripe
-            Box(
-                modifier = Modifier
-                    .width(5.dp)
-                    .fillMaxHeight()
-                    .background(brandAccent)
-            )
-
-            Column(modifier = Modifier.weight(1f)) {
-                // Header Section
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(brandAccent.copy(alpha = 0.045f))
-                        .padding(start = 12.dp, end = 8.dp, top = 12.dp, bottom = 10.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
+                    BrandBadge(brand = modelDetails.brand)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            FlowRow(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                BrandBadge(brand = modelDetails.brand)
-                                Surface(
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = "#${modelDetails.model.modelCode}",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                                Surface(
-                                    color = MaterialTheme.colorScheme.surfaceVariant,
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text(
-                                        text = modelDetails.model.category,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = modelDetails.model.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-
-                            if (modelDetails.model.fabricInfo.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "الخامة: ${modelDetails.model.fabricInfo}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(
-                                onClick = onEditModel,
-                                modifier = Modifier
-                                    .minimumInteractiveComponentSize()
-                                    .testTag("edit_model_${modelDetails.model.id}")
-                            ) {
-                                Icon(
-                                    Icons.Filled.Edit,
-                                    contentDescription = "تعديل الموديل",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            IconButton(
-                                onClick = onDeleteModel,
-                                modifier = Modifier
-                                    .minimumInteractiveComponentSize()
-                                    .testTag("delete_model_${modelDetails.model.id}")
-                            ) {
-                                Icon(
-                                    Icons.Filled.DeleteOutline,
-                                    contentDescription = "حذف الموديل",
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Summary Stats + Collapse Toggle Row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { expanded = !expanded }
-                            .padding(vertical = 4.dp, horizontal = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            MiniModelStat(
-                                text = "${pieces.size} أصناف",
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            )
-                            MiniModelStat(
-                                text = "المخزون: $totalQty",
-                                containerColor = if (lowCount > 0) WarningAmberContainer else SuccessGreenContainer,
-                                contentColor = if (lowCount > 0) WarningAmber else SuccessGreen
-                            )
-                            MiniModelStat(
-                                text = priceSummary,
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.65f),
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                        Icon(
-                            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                            contentDescription = if (expanded) "طي القطع" else "عرض القطع",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp)
+                        Text(
+                            text = "#${modelDetails.model.modelCode}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer
+                    ) {
+                        Text(
+                            text = modelDetails.model.category,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    if (modelDetails.model.fabricInfo.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+                            Text(
+                                text = modelDetails.model.fabricInfo,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
                     }
                 }
 
-                AnimatedVisibility(visible = expanded) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (pieces.isEmpty()) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = "لا توجد قطع مضافة لهذا الموديل بعد",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(12.dp)
-                                )
-                            }
-                        } else {
-                            pieces.forEach { piece ->
-                                PieceInventoryTile(
-                                    piece = piece,
-                                    currencyScale = currencyScale,
-                                    onAdjustStock = { delta -> onAdjustStock(piece.id, delta) },
-                                    onEdit = { onEditPiece(piece) },
-                                    onDelete = { onDeletePiece(piece) }
-                                )
-                            }
-                        }
+                Text(
+                    text = modelDetails.model.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
-                        FilledTonalButton(
-                            onClick = onAddPiece,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
-                                .testTag("add_piece_to_model_${modelDetails.model.id}"),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("إضافة قطعة (لون / قياس / سعر)", style = MaterialTheme.typography.labelLarge)
-                        }
-                    }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                FilledTonalIconButton(
+                    onClick = onEditModel,
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .testTag("edit_model_${modelDetails.model.id}")
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = "تعديل الموديل")
+                }
+                FilledTonalIconButton(
+                    onClick = onDeleteModel,
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = AlertRedContainer,
+                        contentColor = AlertRed
+                    ),
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .testTag("delete_model_${modelDetails.model.id}")
+                ) {
+                    Icon(Icons.Filled.DeleteOutline, contentDescription = "حذف الموديل")
+                }
+            }
+        }
+
+        // Model Summary Tonal Strip
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "الأصناف / المقاسات",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${modelDetails.pieces.size} صنف",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "إجمالي الرصيد",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "$totalStock قطعة",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "القيمة بالمخزون",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = CurrencyFormatter.format(totalValue, currencyScale),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "القطع والألوان والمقاسات",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            FilledTonalButton(
+                onClick = onAddPiece,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.minimumInteractiveComponentSize()
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("إضافة قطعة", fontWeight = FontWeight.Bold)
+            }
+        }
+
+        if (modelDetails.pieces.isEmpty()) {
+            OutlinedCard(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Inventory2,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "لا توجد قطع مضافة لهذا الموديل",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                modelDetails.pieces.forEach { piece ->
+                    PieceM3ListItem(
+                        piece = piece,
+                        currencyScale = currencyScale,
+                        onAdjustStock = { delta -> onAdjustStock(piece.id, delta) },
+                        onEdit = { onEditPiece(piece) },
+                        onDelete = { onDeletePiece(piece) }
+                    )
                 }
             }
         }
@@ -511,30 +692,7 @@ fun InventoryModelCard(
 }
 
 @Composable
-private fun MiniModelStat(
-    text: String,
-    containerColor: Color,
-    contentColor: Color
-) {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = containerColor,
-        border = BorderStroke(0.75.dp, contentColor.copy(alpha = 0.18f))
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = contentColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-        )
-    }
-}
-
-@Composable
-private fun PieceInventoryTile(
+fun PieceM3ListItem(
     piece: PieceVariantEntity,
     currencyScale: CurrencyScale,
     onAdjustStock: (Int) -> Unit,
@@ -542,51 +700,31 @@ private fun PieceInventoryTile(
     onDelete: () -> Unit
 ) {
     val isOut = piece.stockQty <= 0
-    val isLow = piece.stockQty in 1..piece.minStockAlert
+    val isLow = !isOut && piece.stockQty <= piece.minStockAlert
 
-    val statusColor = when {
-        isOut -> AlertRed
-        isLow -> WarningAmber
-        else -> SuccessGreen
-    }
-    val statusBg = when {
-        isOut -> AlertRedContainer
-        isLow -> WarningAmberContainer
-        else -> SuccessGreenContainer
-    }
-    val statusLabel = when {
-        isOut -> "نفد المخزون"
-        isLow -> "مخزون منخفض"
-        else -> "متوفر"
-    }
-    val statusIcon = when {
-        isOut -> Icons.Filled.ErrorOutline
-        isLow -> Icons.Filled.WarningAmber
-        else -> Icons.Filled.CheckCircle
-    }
-
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .testTag("inv_piece_row_${piece.id}"),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.background.copy(alpha = 0.85f),
+    OutlinedCard(
+        shape = RoundedCornerShape(16.dp),
         border = BorderStroke(
             width = 1.dp,
             color = when {
-                isOut -> AlertRed.copy(alpha = 0.4f)
-                isLow -> WarningAmber.copy(alpha = 0.4f)
-                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                isOut -> AlertRed.copy(alpha = 0.5f)
+                isLow -> WarningAmber.copy(alpha = 0.5f)
+                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.32f)
             }
-        )
+        ),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = when {
+                isOut -> AlertRedContainer.copy(alpha = 0.32f)
+                isLow -> WarningAmberContainer.copy(alpha = 0.32f)
+                else -> MaterialTheme.colorScheme.surface
+            }
+        ),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Row 1: Color swatch + Color & Size + SKU + Price pill
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -595,15 +733,24 @@ private fun PieceInventoryTile(
                 Row(
                     modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    ColorSwatchDot(colorName = piece.color)
-                    Column(modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(resolveColorSwatch(piece.color))
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                                CircleShape
+                            )
+                    )
+                    Column {
                         Text(
                             text = "${piece.color} • ${piece.sizeLabel}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
                         )
                         if (piece.skuBarcode.isNotBlank()) {
                             Row(
@@ -611,10 +758,10 @@ private fun PieceInventoryTile(
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(
-                                    Icons.Filled.QrCode2,
+                                    imageVector = Icons.Filled.QrCode2,
                                     contentDescription = null,
-                                    modifier = Modifier.size(13.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(13.dp)
                                 )
                                 Text(
                                     text = piece.skuBarcode,
@@ -626,11 +773,9 @@ private fun PieceInventoryTile(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.75f)
+                    color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Text(
                         text = CurrencyFormatter.format(piece.priceSyp, currencyScale),
@@ -642,123 +787,88 @@ private fun PieceInventoryTile(
                 }
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f))
-
-            // Row 2: Stock Status Badge + Tactile Stepper Capsule + Edit/Delete
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Status Pill
-                Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = statusBg
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = statusIcon,
-                            contentDescription = null,
-                            tint = statusColor,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = statusLabel,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = statusColor
-                        )
-                    }
-                }
-
-                // Controls: Stepper Capsule + Edit + Delete
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(
                                 onClick = { onAdjustStock(-1) },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .testTag("stock_dec_${piece.id}")
+                                enabled = piece.stockQty > 0,
+                                modifier = Modifier.size(40.dp)
                             ) {
-                                Icon(
-                                    Icons.Filled.Remove,
-                                    contentDescription = "إنقاص المخزون",
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Icon(Icons.Filled.Remove, contentDescription = "إنقاص", modifier = Modifier.size(16.dp))
                             }
                             Text(
                                 text = "${piece.stockQty}",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = statusColor,
+                                color = when {
+                                    isOut -> AlertRed
+                                    isLow -> WarningAmber
+                                    else -> SuccessGreen
+                                },
                                 modifier = Modifier.padding(horizontal = 6.dp)
                             )
                             IconButton(
                                 onClick = { onAdjustStock(1) },
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .testTag("stock_inc_${piece.id}")
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(
                                     Icons.Filled.Add,
-                                    contentDescription = "زيادة المخزون",
+                                    contentDescription = "زيادة",
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
                     }
 
-                    OutlinedButton(
+                    FilledTonalButton(
                         onClick = { onAdjustStock(12) },
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)),
-                        modifier = Modifier.height(36.dp)
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.minimumInteractiveComponentSize()
                     ) {
-                        Text(
-                            text = "+12",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Text("+12 دزينة", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     }
+                }
 
+                Row {
                     IconButton(
                         onClick = onEdit,
                         modifier = Modifier
-                            .size(38.dp)
+                            .minimumInteractiveComponentSize()
                             .testTag("edit_piece_${piece.id}")
                     ) {
                         Icon(
                             Icons.Filled.Edit,
                             contentDescription = "تعديل القطعة",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(19.dp)
                         )
                     }
-
                     IconButton(
                         onClick = onDelete,
                         modifier = Modifier
-                            .size(38.dp)
+                            .minimumInteractiveComponentSize()
                             .testTag("delete_piece_${piece.id}")
                     ) {
                         Icon(
                             Icons.Filled.DeleteOutline,
                             contentDescription = "حذف القطعة",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(18.dp)
+                            tint = AlertRed,
+                            modifier = Modifier.size(19.dp)
                         )
                     }
                 }
@@ -768,51 +878,126 @@ private fun PieceInventoryTile(
 }
 
 @Composable
-private fun ColorSwatchDot(colorName: String) {
-    val normalized = colorName.trim()
-    val swatchColor = when {
-        normalized.contains("أبيض") || normalized.contains("ابيض") -> Color(0xFFFAFAFA)
-        normalized.contains("أسود") || normalized.contains("اسود") -> Color(0xFF222222)
-        normalized.contains("سكري") -> Color(0xFFF3E7C9)
-        normalized.contains("رمادي") -> Color(0xFF9098A0)
-        normalized.contains("حديدي") -> Color(0xFF545E66)
-        normalized.contains("كحلي") -> Color(0xFF1B3459)
-        normalized.contains("فوشي") -> Color(0xFFD62B70)
-        normalized.contains("زهر") -> Color(0xFFF49AB6)
-        else -> null
-    }
+fun RestockQueueCard(
+    modelDetails: ModelWithDetails,
+    piece: PieceVariantEntity,
+    currencyScale: CurrencyScale,
+    onAdjustStock: (Int) -> Unit,
+    onEditPiece: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isOut = piece.stockQty <= 0
+    val ratio = if (piece.minStockAlert > 0) {
+        (piece.stockQty.toFloat() / (piece.minStockAlert * 2f)).coerceIn(0f, 1f)
+    } else 0f
 
-    if (swatchColor != null) {
-        Surface(
-            modifier = Modifier.size(14.dp),
-            shape = CircleShape,
-            color = swatchColor,
-            border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.outline)
-        ) {}
-    } else {
-        Box(
-            modifier = Modifier
-                .size(14.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.sweepGradient(
-                        listOf(
-                            Color(0xFFE06C75),
-                            Color(0xFFE5C07B),
-                            Color(0xFF98C379),
-                            Color(0xFF61AFEF),
-                            Color(0xFFC678DD),
-                            Color(0xFFE06C75)
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        BrandBadge(brand = modelDetails.brand)
+                        Text(
+                            text = "#${modelDetails.model.modelCode}",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
                         )
+                    }
+                    Text(
+                        text = "${modelDetails.model.name} (${piece.color} • ${piece.sizeLabel})",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
-                )
-        )
+                    Text(
+                        text = CurrencyFormatter.format(piece.priceSyp, currencyScale),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = if (isOut) AlertRedContainer else WarningAmberContainer
+                ) {
+                    Text(
+                        text = if (isOut) "نفد (0)" else "متبقي ${piece.stockQty} / ${piece.minStockAlert}",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = if (isOut) AlertRed else WarningAmber,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            LinearProgressIndicator(
+                progress = { ratio },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(CircleShape),
+                color = if (isOut) AlertRed else WarningAmber,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                strokeCap = StrokeCap.Round
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FilledTonalButton(
+                    onClick = { onAdjustStock(12) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .minimumInteractiveComponentSize()
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("تزويد +12", fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = { onAdjustStock(24) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .minimumInteractiveComponentSize()
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("تزويد +24", fontWeight = FontWeight.Bold)
+                }
+                FilledTonalIconButton(
+                    onClick = onEditPiece,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = "تعديل القطعة")
+                }
+            }
+        }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun BrandManagementCard(
+fun BrandM3Card(
     brand: BrandEntity,
     modelsCount: Int,
     variantsCount: Int,
@@ -824,132 +1009,97 @@ fun BrandManagementCard(
     modifier: Modifier = Modifier
 ) {
     val accent = Color(brand.accentColorHex)
+    val initialChar = brand.name.trim().firstOrNull()?.uppercaseChar()?.toString() ?: "B"
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .testTag("brand_card_${brand.id}"),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(1.dp, accent.copy(alpha = 0.35f))
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Top Accent Header Band
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(accent.copy(alpha = 0.08f))
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.weight(1f)
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = accent,
+                    modifier = Modifier.size(50.dp)
                 ) {
-                    Surface(
-                        modifier = Modifier.size(44.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        color = accent,
-                        shadowElevation = 2.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = brand.name.trim().take(2).uppercase(),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                        }
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
+                    Box(contentAlignment = Alignment.Center) {
                         Text(
-                            text = brand.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = initialChar,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
                         )
-                        if (brand.notes.isNotBlank()) {
-                            Text(
-                                text = brand.notes,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                     }
                 }
 
-                Row {
-                    IconButton(
-                        onClick = onEdit,
-                        modifier = Modifier
-                            .minimumInteractiveComponentSize()
-                            .testTag("edit_brand_${brand.id}")
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = brand.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = brand.notes.ifBlank { "كتالوج الشركة المسجل بالمخزون" },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                if (lowStockVariants > 0) {
+                    Surface(
+                        shape = CircleShape,
+                        color = WarningAmberContainer
                     ) {
-                        Icon(
-                            Icons.Filled.Edit,
-                            contentDescription = "تعديل الماركة",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier
-                            .minimumInteractiveComponentSize()
-                            .testTag("delete_brand_${brand.id}")
-                    ) {
-                        Icon(
-                            Icons.Filled.DeleteOutline,
-                            contentDescription = "حذف الماركة",
-                            tint = MaterialTheme.colorScheme.error
+                        Text(
+                            text = "$lowStockVariants ناقص",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = WarningAmber,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
                 }
             }
 
-            // Stats & Quick Browse Action
-            Column(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    MiniModelStat(
-                        text = "$modelsCount موديل",
-                        containerColor = accent.copy(alpha = 0.12f),
-                        contentColor = accent
-                    )
-                    MiniModelStat(
-                        text = "$variantsCount صنف",
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    MiniModelStat(
-                        text = "$totalStockQty قطعة بالمخزن",
-                        containerColor = SuccessGreenContainer,
-                        contentColor = SuccessGreen
-                    )
-                    if (lowStockVariants > 0) {
-                        MiniModelStat(
-                            text = "$lowStockVariants نواقص",
-                            containerColor = WarningAmberContainer,
-                            contentColor = WarningAmber
-                        )
-                    }
-                }
+                BrandMetricTile("الموديلات", "$modelsCount", Modifier.weight(1f))
+                BrandMetricTile("الأصناف", "$variantsCount", Modifier.weight(1f))
+                BrandMetricTile("الرصيد", "$totalStockQty", Modifier.weight(1f))
+            }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 FilledTonalButton(
                     onClick = onBrowseBrand,
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = accent.copy(alpha = 0.14f),
+                        contentColor = accent
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .minimumInteractiveComponentSize()
+                        .testTag("browse_brand_${brand.id}")
                 ) {
-                    Text("استعراض موديلات ${brand.name}")
+                    Text("استعراض الموديلات", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
@@ -957,70 +1107,149 @@ fun BrandManagementCard(
                         modifier = Modifier.size(16.dp)
                     )
                 }
+                FilledTonalIconButton(
+                    onClick = onEdit,
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .testTag("edit_brand_${brand.id}")
+                ) {
+                    Icon(Icons.Filled.Edit, contentDescription = "تعديل الماركة")
+                }
+                FilledTonalIconButton(
+                    onClick = onDelete,
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = AlertRedContainer,
+                        contentColor = AlertRed
+                    ),
+                    modifier = Modifier
+                        .minimumInteractiveComponentSize()
+                        .testTag("delete_brand_${brand.id}")
+                ) {
+                    Icon(Icons.Filled.DeleteOutline, contentDescription = "حذف الماركة")
+                }
             }
         }
     }
 }
 
 @Composable
-fun InventoryEmptyState(
-    hasActiveFilters: Boolean,
-    onClearFilters: () -> Unit,
-    onAddModel: () -> Unit,
+private fun BrandMetricTile(
+    label: String,
+    value: String,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 36.dp, horizontal = 24.dp),
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
         Column(
+            modifier = Modifier.padding(vertical = 8.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.ExtraBold
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+fun InventoryM3EmptyState(
+    icon: ImageVector = Icons.Filled.Checkroom,
+    title: String,
+    subtitle: String,
+    primaryActionLabel: String? = null,
+    onPrimaryAction: (() -> Unit)? = null,
+    secondaryActionLabel: String? = null,
+    onSecondaryAction: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    OutlinedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Surface(
-                modifier = Modifier.size(76.dp),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(72.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        imageVector = Icons.Filled.Inventory2,
+                        imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(36.dp)
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(34.dp)
                     )
                 }
             }
+
             Text(
-                text = if (hasActiveFilters) "لا توجد موديلات مطابقة للبحث" else "المخزون فارغ حالياً",
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = if (hasActiveFilters) {
-                    "جرّب تغيير كلمات البحث أو إزالة الفلاتر لعرض جميع الموديلات."
-                } else {
-                    "أضف أول موديل وابدأ بمتابعة الكميات والأسعار لكل لون وقياس."
-                },
-                style = MaterialTheme.typography.bodySmall,
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            if (hasActiveFilters) {
-                OutlinedButton(onClick = onClearFilters, shape = RoundedCornerShape(12.dp)) {
-                    Icon(Icons.Filled.RestartAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("إعادة ضبط الفلاتر")
-                }
-            } else {
-                Button(onClick = onAddModel, shape = RoundedCornerShape(12.dp)) {
-                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("إضافة موديل جديد")
+
+            if (primaryActionLabel != null || secondaryActionLabel != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (secondaryActionLabel != null && onSecondaryAction != null) {
+                        OutlinedButton(
+                            onClick = onSecondaryAction,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
+                            Text(secondaryActionLabel)
+                        }
+                    }
+                    if (primaryActionLabel != null && onPrimaryAction != null) {
+                        Button(
+                            onClick = onPrimaryAction,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
+                            Text(primaryActionLabel)
+                        }
+                    }
                 }
             }
         }
+    }
+}
+
+private fun resolveColorSwatch(colorLabel: String): Color {
+    val normalized = colorLabel.trim()
+    return when {
+        normalized.contains("أبيض") || normalized.contains("ابيض") -> Color(0xFFF7F7F5)
+        normalized.contains("أسود") || normalized.contains("اسود") -> Color(0xFF1F2428)
+        normalized.contains("سكري") -> Color(0xFFF3E9D2)
+        normalized.contains("كحلي") -> Color(0xFF1A3254)
+        normalized.contains("رمادي") || normalized.contains("حديدي") -> Color(0xFF7D8590)
+        normalized.contains("فوشي") -> Color(0xFFD81B60)
+        normalized.contains("زهر") -> Color(0xFFF48FB1)
+        normalized.contains("أحمر") || normalized.contains("احمر") -> Color(0xFFC62828)
+        normalized.contains("أزرق") || normalized.contains("ازرق") -> Color(0xFF1E88E5)
+        normalized.contains("أخضر") || normalized.contains("اخضر") -> Color(0xFF2E7D32)
+        else -> Color(0xFFC88A2E)
     }
 }

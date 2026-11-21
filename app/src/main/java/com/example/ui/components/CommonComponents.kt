@@ -19,20 +19,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -98,25 +100,47 @@ fun BrandFilterRow(
             .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        val allSelected = selectedBrandId == null
         FilterChip(
-            selected = selectedBrandId == null,
+            selected = allSelected,
             onClick = { onSelectBrand(null) },
+            leadingIcon = if (allSelected) {
+                {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        modifier = Modifier.size(FilterChipDefaults.IconSize)
+                    )
+                }
+            } else null,
             label = { Text("كل الماركات") },
             modifier = Modifier.testTag("filter_brand_all"),
             colors = FilterChipDefaults.filterChipColors(
                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         )
         brands.forEach { brand ->
+            val selected = selectedBrandId == brand.id
             FilterChip(
-                selected = selectedBrandId == brand.id,
-                onClick = { onSelectBrand(if (selectedBrandId == brand.id) null else brand.id) },
+                selected = selected,
+                onClick = { onSelectBrand(if (selected) null else brand.id) },
+                leadingIcon = if (selected) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                    }
+                } else null,
                 label = { Text(brand.name) },
                 modifier = Modifier.testTag("filter_brand_${brand.id}"),
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
         }
@@ -136,14 +160,25 @@ fun CategoryFilterRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         PosViewModel.CATEGORIES.forEach { cat ->
+            val selected = selectedCategory == cat
             FilterChip(
-                selected = selectedCategory == cat,
+                selected = selected,
                 onClick = { onSelectCategory(cat) },
+                leadingIcon = if (selected) {
+                    {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                        )
+                    }
+                } else null,
                 label = { Text(cat) },
                 modifier = Modifier.testTag("filter_cat_$cat"),
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             )
         }
@@ -191,6 +226,7 @@ fun ReceiptDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(28.dp),
         title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -211,7 +247,10 @@ fun ReceiptDialog(
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
-                IconButton(onClick = onDismiss) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.minimumInteractiveComponentSize()
+                ) {
                     Icon(Icons.Filled.Close, contentDescription = "إغلاق")
                 }
             }
@@ -221,30 +260,43 @@ fun ReceiptDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = storeName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "${invoice.invoiceNumber} • ${CurrencyFormatter.formatDateTime(invoice.createdAt)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "الزبون: ${invoice.customerName}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                if (invoice.note.isNotBlank()) {
-                    Text(
-                        text = "ملاحظة: ${invoice.note}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Text(
+                            text = storeName,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "${invoice.invoiceNumber} • ${CurrencyFormatter.formatDateTime(invoice.createdAt)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "الزبون: ${invoice.customerName}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        if (invoice.note.isNotBlank()) {
+                            Text(
+                                text = "ملاحظة: ${invoice.note}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
                 invoiceWithItems.items.forEach { item ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -275,9 +327,11 @@ fun ReceiptDialog(
                             fontWeight = FontWeight.Bold
                         )
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                 }
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
                 if (invoice.discountSyp > 0L) {
                     ReceiptTotalRow(
                         label = "المجموع الفرعي",
@@ -318,7 +372,7 @@ fun ReceiptDialog(
             }
         },
         dismissButton = {
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = {
                     val shareIntent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"

@@ -5,42 +5,44 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PointOfSale
-import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.PointOfSale
-import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
-import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -51,8 +53,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -71,7 +73,7 @@ import com.example.ui.screens.SalesHistoryScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.AppColorPalette
 import com.example.ui.theme.SyriaPosTheme
-import com.example.ui.theme.ThemeMode
+import com.example.ui.theme.WarningAmber
 
 enum class AppDestination(
     val title: String,
@@ -81,7 +83,7 @@ enum class AppDestination(
 ) {
     POS("نقطة البيع", Icons.Filled.PointOfSale, Icons.Outlined.PointOfSale, "nav_pos"),
     INVENTORY("المخزون", Icons.Filled.Inventory2, Icons.Outlined.Inventory2, "nav_inventory"),
-    INVOICES("الفواتير", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong, "nav_invoices"),
+    INVOICES("الفواتير", Icons.AutoMirrored.Filled.ReceiptLong, Icons.AutoMirrored.Outlined.ReceiptLong, "nav_invoices"),
     SETTINGS("الإعدادات", Icons.Filled.Settings, Icons.Outlined.Settings, "nav_settings")
 }
 
@@ -126,6 +128,11 @@ fun SyriaPosApp() {
     var currentDest by rememberSaveable { mutableStateOf(AppDestination.POS) }
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val cartTotalQty = remember(cartItems) { cartItems.sumOf { it.quantity } }
+    val lowStockCount = remember(allModels) {
+        allModels.sumOf { m -> m.pieces.count { it.stockQty <= it.minStockAlert } }
+    }
+
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
@@ -143,6 +150,7 @@ fun SyriaPosApp() {
 
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
+                containerColor = MaterialTheme.colorScheme.background,
                 contentWindowInsets = WindowInsets.safeDrawing,
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 topBar = {
@@ -160,62 +168,49 @@ fun SyriaPosApp() {
                                 )
                             },
                             actions = {
-                                IconButton(
+                                FilledTonalIconButton(
                                     onClick = {
                                         val entries = AppColorPalette.entries
                                         val next = entries[(entries.indexOf(appPalette) + 1) % entries.size]
                                         viewModel.setAppPalette(next)
                                     },
-                                    modifier = Modifier.testTag("quick_palette_cycle")
+                                    modifier = Modifier
+                                        .padding(end = 6.dp)
+                                        .testTag("quick_palette_cycle")
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Palette,
-                                        contentDescription = "تبديل تناسق الألوان",
-                                        tint = MaterialTheme.colorScheme.primary
+                                        contentDescription = "تبديل تناسق الألوان"
                                     )
                                 }
                             },
                             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                 titleContentColor = MaterialTheme.colorScheme.onSurface
                             )
                         )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(2.dp)
-                                .background(
-                                    Brush.horizontalGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.secondary,
-                                            MaterialTheme.colorScheme.tertiary
-                                        )
-                                    )
-                                )
-                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     }
                 },
                 bottomBar = {
                     if (!useRail) {
-                        NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
+                        NavigationBar(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
+                        ) {
                             AppDestination.entries.forEach { dest ->
                                 val selected = currentDest == dest
                                 NavigationBarItem(
                                     selected = selected,
                                     onClick = { currentDest = dest },
                                     icon = {
-                                        Icon(
-                                            imageVector = if (selected) dest.selectedIcon else dest.unselectedIcon,
-                                            contentDescription = dest.title
+                                        DestinationBadgedIcon(
+                                            dest = dest,
+                                            selected = selected,
+                                            cartTotalQty = cartTotalQty,
+                                            lowStockCount = lowStockCount
                                         )
                                     },
                                     label = { Text(dest.title) },
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
-                                    ),
                                     modifier = Modifier.testTag(dest.testTag)
                                 )
                             }
@@ -230,7 +225,26 @@ fun SyriaPosApp() {
                 ) {
                     if (useRail) {
                         NavigationRail(
-                            containerColor = MaterialTheme.colorScheme.surface,
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            header = {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    modifier = Modifier.size(48.dp)
+                                ) {
+                                    androidx.compose.foundation.layout.Box(
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.PointOfSale,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            },
                             modifier = Modifier.fillMaxHeight()
                         ) {
                             AppDestination.entries.forEach { dest ->
@@ -239,17 +253,14 @@ fun SyriaPosApp() {
                                     selected = selected,
                                     onClick = { currentDest = dest },
                                     icon = {
-                                        Icon(
-                                            imageVector = if (selected) dest.selectedIcon else dest.unselectedIcon,
-                                            contentDescription = dest.title
+                                        DestinationBadgedIcon(
+                                            dest = dest,
+                                            selected = selected,
+                                            cartTotalQty = cartTotalQty,
+                                            lowStockCount = lowStockCount
                                         )
                                     },
                                     label = { Text(dest.title) },
-                                    colors = NavigationRailItemDefaults.colors(
-                                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        selectedTextColor = MaterialTheme.colorScheme.primary,
-                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer
-                                    ),
                                     modifier = Modifier.testTag(dest.testTag)
                                 )
                             }
@@ -336,5 +347,42 @@ fun SyriaPosApp() {
                 onDismiss = viewModel::dismissCompletedInvoice
             )
         }
+    }
+}
+
+@Composable
+private fun DestinationBadgedIcon(
+    dest: AppDestination,
+    selected: Boolean,
+    cartTotalQty: Int,
+    lowStockCount: Int
+) {
+    val badgeCount = when (dest) {
+        AppDestination.POS -> cartTotalQty
+        AppDestination.INVENTORY -> lowStockCount
+        else -> 0
+    }
+    if (badgeCount > 0) {
+        BadgedBox(
+            badge = {
+                Badge(
+                    containerColor = if (dest == AppDestination.INVENTORY) WarningAmber
+                    else MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ) {
+                    Text(if (badgeCount > 99) "99+" else "$badgeCount")
+                }
+            }
+        ) {
+            Icon(
+                imageVector = if (selected) dest.selectedIcon else dest.unselectedIcon,
+                contentDescription = dest.title
+            )
+        }
+    } else {
+        Icon(
+            imageVector = if (selected) dest.selectedIcon else dest.unselectedIcon,
+            contentDescription = dest.title
+        )
     }
 }

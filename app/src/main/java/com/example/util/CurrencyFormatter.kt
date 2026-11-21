@@ -54,7 +54,7 @@ object CurrencyFormatter {
     }
 
     fun formatDateTime(epochMillis: Long): String {
-        val sdf = SimpleDateFormat("yyyy/MM/dd  hh:mm a", Locale("ar"))
+        val sdf = SimpleDateFormat("yyyy/MM/dd  hh:mm a", Locale.forLanguageTag("ar"))
         return sdf.format(Date(epochMillis))
     }
 }
