@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build-release-apk:
-    name: Test & Build Release APK
+    name: Build & Package Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -31,29 +31,42 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Set up Android SDK & Accept Licenses
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+
+          SDKMANAGER=$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager 2>/dev/null | head -n 1)
+          if [ -z "$SDKMANAGER" ]; then
+            echo "cmdline-tools not found under $SDK_ROOT; downloading commandlinetools..."
+            mkdir -p "$SDK_ROOT/cmdline-tools"
+            curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdline-tools.zip
+            unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-extract
+            rm -rf "$SDK_ROOT/cmdline-tools/latest"
+            mv /tmp/cmdline-extract/cmdline-tools "$SDK_ROOT/cmdline-tools/latest"
+            rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-extract
+            SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          fi
+
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          "$SDKMANAGER" --install "platform-tools" "build-tools;36.0.0" "platforms;android-36" "platforms;android-36.1" || \
+            "$SDKMANAGER" --install "platform-tools" "build-tools;36.0.0" "platforms;android-36"
 
       - name: Set up Gradle 9.3.1
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: "9.3.1"
 
-      - name: Prepare debug keystore for unit tests
+      - name: Verify Gradle installation
         run: |
-          if [ ! -f debug.keystore ]; then
-            if [ -f debug.keystore.base64 ]; then
-              base64 -d debug.keystore.base64 > debug.keystore
-            else
-              keytool -genkeypair -v -keystore debug.keystore \
-                -storepass android -alias androiddebugkey -keypass android \
-                -keyalg RSA -keysize 2048 -validity 10000 \
-                -dname "CN=Android Debug,O=Android,C=US"
-            fi
+          if ! command -v gradle >/dev/null 2>&1; then
+            curl -fsSL https://services.gradle.org/distributions/gradle-9.3.1-bin.zip -o /tmp/gradle.zip
+            unzip -q /tmp/gradle.zip -d /tmp/gradle-dist
+            echo "/tmp/gradle-dist/gradle-9.3.1/bin" >> "$GITHUB_PATH"
+            export PATH="/tmp/gradle-dist/gradle-9.3.1/bin:$PATH"
           fi
-
-      - name: Run unit tests
-        run: gradle :app:testDebugUnitTest --no-daemon
+          gradle --version
 
       - name: Prepare release signing keystore
         env:
@@ -65,23 +78,28 @@ jobs:
           echo "KEYSTORE_PATH=$KEYSTORE_FILE" >> "$GITHUB_ENV"
 
           if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$SECRET_STORE_PASSWORD" ] && [ -n "$SECRET_KEY_PASSWORD" ]; then
-            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_FILE"
+            echo "$RELEASE_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > "$KEYSTORE_FILE"
             echo "STORE_PASSWORD=$SECRET_STORE_PASSWORD" >> "$GITHUB_ENV"
             echo "KEY_PASSWORD=$SECRET_KEY_PASSWORD" >> "$GITHUB_ENV"
-            echo "Using repository release keystore secrets." >> "$GITHUB_STEP_SUMMARY"
+            echo "Signed release APK with repository release keystore secrets." >> "$GITHUB_STEP_SUMMARY"
           else
             FALLBACK_PASS="SyriaPosRelease2026"
-            keytool -genkeypair -v -keystore "$KEYSTORE_FILE" \
+            keytool -genkeypair -noprompt -keystore "$KEYSTORE_FILE" \
               -storepass "$FALLBACK_PASS" -alias upload -keypass "$FALLBACK_PASS" \
               -keyalg RSA -keysize 2048 -validity 10000 \
               -dname "CN=SyriaPOS,O=SyriaPOS,C=SY"
             echo "STORE_PASSWORD=$FALLBACK_PASS" >> "$GITHUB_ENV"
             echo "KEY_PASSWORD=$FALLBACK_PASS" >> "$GITHUB_ENV"
-            echo "::warning::RELEASE_KEYSTORE_BASE64 / STORE_PASSWORD / KEY_PASSWORD secrets are not set. Generated an ephemeral upload keystore for direct APK distribution. Add those 3 secrets in GitHub Settings -> Secrets to keep a permanent signing key across future app updates." >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::RELEASE_KEYSTORE_BASE64 / STORE_PASSWORD / KEY_PASSWORD secrets are not set. Generated an upload keystore for direct APK distribution." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Build Signed Release APK
-        run: gradle :app:assembleRelease --no-daemon
+        run: |
+          gradle :app:assembleRelease \
+            --no-daemon \
+            --max-workers=2 \
+            -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8" \
+            --stacktrace
 
       - name: Package final distribution APK
         run: |
@@ -95,6 +113,23 @@ jobs:
           name: SyriaPOS-release-apk
           path: dist/SyriaPOS-v1.0-release.apk
           if-no-files-found: error
+
+      - name: Prepare debug keystore & run unit tests
+        run: |
+          if [ ! -f debug.keystore ]; then
+            if [ -f debug.keystore.base64 ]; then
+              tr -d '[:space:]' < debug.keystore.base64 | base64 -d > debug.keystore
+            else
+              keytool -genkeypair -noprompt -keystore debug.keystore \
+                -storepass android -alias androiddebugkey -keypass android \
+                -keyalg RSA -keysize 2048 -validity 10000 \
+                -dname "CN=Android Debug,O=Android,C=US"
+            fi
+          fi
+          gradle :app:testDebugUnitTest \
+            --no-daemon \
+            --max-workers=2 \
+            -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
 
       - name: Attach Release APK to GitHub Release (on v* tag)
         if: startsWith(github.ref, 'refs/tags/v')

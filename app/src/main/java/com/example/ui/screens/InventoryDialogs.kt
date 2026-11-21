@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,21 +11,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -58,6 +67,43 @@ private val BRAND_COLORS = listOf(
 )
 
 @Composable
+private fun DialogTitleHeader(
+    icon: ImageVector,
+    title: String,
+    subtitle: String? = null,
+    tint: Color = MaterialTheme.colorScheme.primary
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = tint.copy(alpha = 0.14f)
+        ) {
+            Box(modifier = Modifier.padding(9.dp), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = tint,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+        Column {
+            Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun BrandEditorDialog(
     initialBrand: BrandEntity?,
     onDismiss: () -> Unit,
@@ -68,9 +114,18 @@ fun BrandEditorDialog(
     var selectedColor by remember { mutableLongStateOf(initialBrand?.accentColorHex ?: BRAND_COLORS.first()) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
+    val fieldShape = RoundedCornerShape(12.dp)
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialBrand == null) "إضافة ماركة جديدة" else "تعديل الماركة") },
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            DialogTitleHeader(
+                icon = Icons.Filled.Storefront,
+                title = if (initialBrand == null) "إضافة ماركة جديدة" else "تعديل الماركة",
+                subtitle = "إدارة اسم الشركة ولون الشارة المميز"
+            )
+        },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -81,6 +136,7 @@ fun BrandEditorDialog(
                     onValueChange = { name = it; errorMsg = null },
                     label = { Text("اسم الماركة / الشركة *") },
                     singleLine = true,
+                    shape = fieldShape,
                     isError = errorMsg != null,
                     supportingText = errorMsg?.let { { Text(it) } },
                     modifier = Modifier.fillMaxWidth().testTag("brand_name_input")
@@ -90,23 +146,34 @@ fun BrandEditorDialog(
                     onValueChange = { notes = it },
                     label = { Text("ملاحظات (اختياري)") },
                     maxLines = 2,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth().testTag("brand_notes_input")
                 )
-                Text("لون الشارة", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("لون الشارة", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     BRAND_COLORS.forEach { hex ->
                         val isSelected = selectedColor == hex
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(38.dp)
                                 .clip(CircleShape)
                                 .background(Color(hex))
                                 .then(
                                     if (isSelected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
                                     else Modifier
                                 )
-                                .clickable { selectedColor = hex }
-                        )
+                                .clickable { selectedColor = hex },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "محدد",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -120,6 +187,7 @@ fun BrandEditorDialog(
                         onSave(name, notes, selectedColor)
                     }
                 },
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.testTag("save_brand_button")
             ) {
                 Text("حفظ")
@@ -158,22 +226,31 @@ fun ModelEditorDialog(
     var fabricInfo by remember { mutableStateOf(initialModel?.fabricInfo ?: "") }
 
     // Initial piece fields when creating a brand new model
-    var addFirstPiece by remember { mutableStateOf(initialModel == null) }
+    val addFirstPiece = initialModel == null
     var firstColor by remember { mutableStateOf("أبيض") }
     var firstSize by remember { mutableStateOf("S..XXL") }
     var firstPriceText by remember { mutableStateOf("") }
     var firstStockText by remember { mutableStateOf("20") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
+    val fieldShape = RoundedCornerShape(12.dp)
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialModel == null) "إضافة موديل جديد" else "تعديل الموديل") },
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            DialogTitleHeader(
+                icon = Icons.Filled.Category,
+                title = if (initialModel == null) "إضافة موديل جديد" else "تعديل الموديل",
+                subtitle = if (initialModel == null) "تعريف الموديل وإضافة أول قطعة له" else "تعديل بيانات الموديل الأساسية"
+            )
+        },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text("الماركة", style = MaterialTheme.typography.labelLarge)
+                Text("الماركة", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -193,6 +270,7 @@ fun ModelEditorDialog(
                     onValueChange = { modelCode = it; errorMsg = null },
                     label = { Text("رقم الموديل *") },
                     singleLine = true,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth().testTag("model_code_input")
                 )
                 OutlinedTextField(
@@ -200,9 +278,10 @@ fun ModelEditorDialog(
                     onValueChange = { name = it; errorMsg = null },
                     label = { Text("اسم الموديل / المواصفات *") },
                     singleLine = true,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth().testTag("model_name_input")
                 )
-                Text("القسم", style = MaterialTheme.typography.labelLarge)
+                Text("القسم", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -222,49 +301,66 @@ fun ModelEditorDialog(
                     onValueChange = { fabricInfo = it },
                     label = { Text("نوع القماش (مثال: قطن، ليكرا، صوف)") },
                     singleLine = true,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                if (initialModel == null && addFirstPiece) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                    Text(
-                        "القطعة الأولى للموديل",
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = firstColor,
-                            onValueChange = { firstColor = it },
-                            label = { Text("اللون") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                        OutlinedTextField(
-                            value = firstSize,
-                            onValueChange = { firstSize = it },
-                            label = { Text("القياس") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = firstPriceText,
-                            onValueChange = { firstPriceText = it; errorMsg = null },
-                            label = { Text("السعر (${currencyScale.shortUnit}) *") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            singleLine = true,
-                            modifier = Modifier.weight(1.3f).testTag("model_initial_price_input")
-                        )
-                        OutlinedTextField(
-                            value = firstStockText,
-                            onValueChange = { firstStockText = it },
-                            label = { Text("الكمية") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            modifier = Modifier.weight(0.9f)
-                        )
+                if (addFirstPiece) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                "القطعة الأولى للموديل",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(
+                                    value = firstColor,
+                                    onValueChange = { firstColor = it },
+                                    label = { Text("اللون") },
+                                    singleLine = true,
+                                    shape = fieldShape,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                OutlinedTextField(
+                                    value = firstSize,
+                                    onValueChange = { firstSize = it },
+                                    label = { Text("القياس") },
+                                    singleLine = true,
+                                    shape = fieldShape,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                OutlinedTextField(
+                                    value = firstPriceText,
+                                    onValueChange = { firstPriceText = it; errorMsg = null },
+                                    label = { Text("السعر (${currencyScale.shortUnit}) *") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                                    singleLine = true,
+                                    shape = fieldShape,
+                                    modifier = Modifier.weight(1.3f).testTag("model_initial_price_input")
+                                )
+                                OutlinedTextField(
+                                    value = firstStockText,
+                                    onValueChange = { firstStockText = it },
+                                    label = { Text("الكمية") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    shape = fieldShape,
+                                    modifier = Modifier.weight(0.9f)
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -284,7 +380,7 @@ fun ModelEditorDialog(
                         errorMsg = "رقم الموديل واسم الموديل مطلوبان"
                         return@Button
                     }
-                    val parsedPrice = if (initialModel == null && addFirstPiece) {
+                    val parsedPrice = if (addFirstPiece) {
                         CurrencyFormatter.parseInputToOldSyp(firstPriceText, currencyScale)
                             ?: run {
                                 errorMsg = "أدخل سعراً صحيحاً للقطعة الأولى"
@@ -298,12 +394,13 @@ fun ModelEditorDialog(
                         name,
                         category,
                         fabricInfo,
-                        if (initialModel == null) firstColor else null,
-                        if (initialModel == null) firstSize else null,
+                        if (addFirstPiece) firstColor else null,
+                        if (addFirstPiece) firstSize else null,
                         parsedPrice,
                         firstStockText.toIntOrNull() ?: 20
                     )
                 },
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.testTag("save_model_button")
             ) {
                 Text("حفظ")
@@ -342,17 +439,17 @@ fun PieceEditorDialog(
     var skuBarcode by remember { mutableStateOf(initialPiece?.skuBarcode ?: "") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
 
+    val fieldShape = RoundedCornerShape(12.dp)
+
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(24.dp),
         title = {
-            Column {
-                Text(if (initialPiece == null) "إضافة قطعة جديدة" else "تعديل القطعة")
-                Text(
-                    modelLabel,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            DialogTitleHeader(
+                icon = Icons.Filled.Inventory2,
+                title = if (initialPiece == null) "إضافة قطعة جديدة" else "تعديل القطعة",
+                subtitle = modelLabel
+            )
         },
         text = {
             Column(
@@ -365,6 +462,7 @@ fun PieceEditorDialog(
                         onValueChange = { color = it },
                         label = { Text("اللون *") },
                         singleLine = true,
+                        shape = fieldShape,
                         modifier = Modifier.weight(1f).testTag("piece_color_input")
                     )
                     OutlinedTextField(
@@ -372,6 +470,7 @@ fun PieceEditorDialog(
                         onValueChange = { sizeLabel = it },
                         label = { Text("القياس *") },
                         singleLine = true,
+                        shape = fieldShape,
                         modifier = Modifier.weight(1f).testTag("piece_size_input")
                     )
                 }
@@ -381,6 +480,7 @@ fun PieceEditorDialog(
                     label = { Text("سعر القطعة (${currencyScale.shortUnit}) *") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth().testTag("piece_price_input")
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -390,6 +490,7 @@ fun PieceEditorDialog(
                         label = { Text("الكمية بالمخزون") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
+                        shape = fieldShape,
                         modifier = Modifier.weight(1f).testTag("piece_stock_input")
                     )
                     OutlinedTextField(
@@ -398,6 +499,7 @@ fun PieceEditorDialog(
                         label = { Text("حد التنبيه") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
+                        shape = fieldShape,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -406,6 +508,7 @@ fun PieceEditorDialog(
                     onValueChange = { skuBarcode = it },
                     label = { Text("باركود / رمز إضافي (اختياري)") },
                     singleLine = true,
+                    shape = fieldShape,
                     modifier = Modifier.fillMaxWidth()
                 )
                 errorMsg?.let {
@@ -435,6 +538,7 @@ fun PieceEditorDialog(
                         skuBarcode
                     )
                 },
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.testTag("save_piece_button")
             ) {
                 Text("حفظ")
@@ -455,11 +559,19 @@ fun ConfirmDeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title, fontWeight = FontWeight.Bold) },
-        text = { Text(message) },
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            DialogTitleHeader(
+                icon = Icons.Filled.DeleteForever,
+                title = title,
+                tint = MaterialTheme.colorScheme.error
+            )
+        },
+        text = { Text(message, style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
             Button(
                 onClick = onConfirm,
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.testTag("confirm_delete_button")
             ) {
