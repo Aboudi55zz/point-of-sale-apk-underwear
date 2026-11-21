@@ -1,0 +1,104 @@
+name: Build Release APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-apk:
+    name: Test & Build Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle 9.3.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.3.1"
+
+      - name: Prepare debug keystore for unit tests
+        run: |
+          if [ ! -f debug.keystore ]; then
+            if [ -f debug.keystore.base64 ]; then
+              base64 -d debug.keystore.base64 > debug.keystore
+            else
+              keytool -genkeypair -v -keystore debug.keystore \
+                -storepass android -alias androiddebugkey -keypass android \
+                -keyalg RSA -keysize 2048 -validity 10000 \
+                -dname "CN=Android Debug,O=Android,C=US"
+            fi
+          fi
+
+      - name: Run unit tests
+        run: gradle :app:testDebugUnitTest --no-daemon
+
+      - name: Prepare release signing keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          SECRET_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          SECRET_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          KEYSTORE_FILE="${{ github.workspace }}/my-upload-key.jks"
+          echo "KEYSTORE_PATH=$KEYSTORE_FILE" >> "$GITHUB_ENV"
+
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ] && [ -n "$SECRET_STORE_PASSWORD" ] && [ -n "$SECRET_KEY_PASSWORD" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_FILE"
+            echo "STORE_PASSWORD=$SECRET_STORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=$SECRET_KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "Using repository release keystore secrets." >> "$GITHUB_STEP_SUMMARY"
+          else
+            FALLBACK_PASS="SyriaPosRelease2026"
+            keytool -genkeypair -v -keystore "$KEYSTORE_FILE" \
+              -storepass "$FALLBACK_PASS" -alias upload -keypass "$FALLBACK_PASS" \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=SyriaPOS,O=SyriaPOS,C=SY"
+            echo "STORE_PASSWORD=$FALLBACK_PASS" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=$FALLBACK_PASS" >> "$GITHUB_ENV"
+            echo "::warning::RELEASE_KEYSTORE_BASE64 / STORE_PASSWORD / KEY_PASSWORD secrets are not set. Generated an ephemeral upload keystore for direct APK distribution. Add those 3 secrets in GitHub Settings -> Secrets to keep a permanent signing key across future app updates." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Build Signed Release APK
+        run: gradle :app:assembleRelease --no-daemon
+
+      - name: Package final distribution APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/SyriaPOS-v1.0-release.apk
+          ls -lh dist/
+
+      - name: Upload Release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SyriaPOS-release-apk
+          path: dist/SyriaPOS-v1.0-release.apk
+          if-no-files-found: error
+
+      - name: Attach Release APK to GitHub Release (on v* tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/SyriaPOS-v1.0-release.apk
+          fail_on_unmatched_files: true
