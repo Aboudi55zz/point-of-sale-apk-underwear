@@ -1,0 +1,6 @@
+{
+  "name": "نقطة بيع",
+  "description": "تطبيق نقطة بيع (POS) وإدارة مخزون بالليرة السورية مع إمكانية إضافة وحذف وتعديل كل قطعة وموديل وماركة.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

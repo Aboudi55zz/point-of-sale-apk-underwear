@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">نقطة بيع</string>
+    <string name="nav_pos">نقطة البيع</string>
+    <string name="nav_inventory">المخزون</string>
+    <string name="nav_invoices">الفواتير</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="currency_syp_short">ل.س</string>
+    <string name="search_hint_pos">ابحث برقم الموديل، الاسم، الماركة أو اللون...</string>
+    <string name="search_hint_inventory">ابحث في المخزون بالماركة أو الموديل أو القطعة...</string>
+    <string name="empty_cart_title">السلة فارغة</string>
+    <string name="empty_cart_subtitle">اضغط على أي قطعة لإضافتها إلى الفاتورة</string>
+    <string name="checkout_button">إتمام البيع</string>
+    <string name="confirm_delete">تأكيد الحذف</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="delete">حذف</string>
+    <string name="edit">تعديل</string>
+    <string name="add">إضافة</string>
+</resources>
